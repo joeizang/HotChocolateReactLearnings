@@ -11,7 +11,7 @@ namespace MyGraphqlXunitTests.FileSystemServiceTests
         [Fact]
         public void GetAllFilesReturnsEnumerableWithFileInfos()
         {
-
+            
         }
     }
 }

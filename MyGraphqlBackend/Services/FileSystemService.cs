@@ -12,7 +12,7 @@ namespace MyGraphqlBackend.Services
     {
         public IEnumerable<FileInfo> GetAllFiles(string targetFolder, string[] searchPattern, SearchOption option)
         {
-            FileInfo[] files = new FileInfo[] { };
+            FileInfo[] files = { };
             var dir = new DirectoryInfo(targetFolder);
 
             foreach (var pattern in searchPattern)
