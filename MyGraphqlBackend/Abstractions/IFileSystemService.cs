@@ -4,24 +4,25 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.FileProviders;
+using MyGraphqlDomain.Abstractions;
 
 namespace MyGraphqlBackend.Abstractions
 {
     public interface IFileSystemService
     {
-        IEnumerable<FileInfo> GetAllFiles(string targetFolder, string[] searchPattern, SearchOption option);
+        IEnumerable<IMovieFileInfo> GetAllFiles(string targetFolder, string[] searchPattern, SearchOption option);
 
-        IFileInfo GetFile(string movieName);
+        IMovieFileInfo GetFile(string movieName);
 
-        IList<IFileInfo> FindFilesBy(FindFileCondition condition);
+        IList<IMovieFileInfo> FindFilesBy(FindFileCondition condition);
     }
 
     public class FindFileCondition
     {
-        public DateTimeOffset? MovieDate { get; set; }
+        public virtual DateTimeOffset? MovieDate { get; set; }
 
-        public string? MovieName { get; set; }
+        public virtual string? MovieName { get; set; }
 
-        public float? MovieLength { get; set; }
+        public virtual float? MovieLength { get; set; }
     }
 }
