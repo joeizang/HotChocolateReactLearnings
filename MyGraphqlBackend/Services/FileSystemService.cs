@@ -7,50 +7,157 @@ using Microsoft.Extensions.FileProviders;
 using MyGraphqlBackend.Abstractions;
 using MyGraphqlDomain.Abstractions;
 using MyGraphqlDomain.DomainModels;
+using Xabe.FFmpeg;
 
 namespace MyGraphqlBackend.Services
 {
-    public class FileSystemService : IFileSystemService
+  public class FileSystemService : IFileSystemService
+  {
+    public FileSystemService(string targetFolder, string[]? searchPattern, SearchOption? options, EnumerationOptions? enumerationOptions)
     {
-        public IEnumerable<IMovieFileInfo> GetAllFiles(string targetFolder, string[] searchPattern, SearchOption option)
-        {
-            MovieFileInfo[] files = { };
+      if (targetFolder.Equals(string.Empty) || targetFolder.Count() < 2)
+        throw new ArgumentException("The filesystem path provided is in an invalid state!");
+      TargetPath = targetFolder;
 
-            try
-            {
-                DirectoryInfo dir = new DirectoryInfo(targetFolder);
+      DirInfo = new DirectoryInfo(TargetPath);
 
-                foreach (var pattern in searchPattern)
-                {
-                    files = dir.GetFiles(pattern, option).Select(x => new MovieFileInfo
-                    {
-                        MovieName = x.Name,
-                        CreatedAt = x.CreationTime,
-                        LocationOnDisk = x.FullName,
-                        FileType = x.Extension,
-                        MovieSize = x.Length,
-                        Exists = x.Exists,
-                        PlaybackTime = 65F, //create a method that will calculate playback time on the fly
-                        Thumbnail = x.FullName
-                    }).ToArray();
-                }
-            }
-            catch (Exception e)
-            {
-                throw new Exception(e.Message);
-            }
+      //check the state of the array of search patterns to know what to do.
+      if (searchPattern is null)
+      {
+        SearchPattern = new string[] { "*.mp4", "*.mkv", "*.flv", "*.avi", "*.mpg" };
+      }
+      else
+      {
+        SearchPattern = searchPattern;
+      }
 
-            return files;
-        }
+      //check the state of SearchOptions
+      if (options is null)
+      {
+        this.SearchOption = System.IO.SearchOption.TopDirectoryOnly;
+      }
+      this.SearchOption = options;
 
-        public IMovieFileInfo GetFile(string movieName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IList<IMovieFileInfo> FindFilesBy(FindFileCondition condition)
-        {
-            throw new NotImplementedException();
-        }
+      if (enumerationOptions is null)
+      {
+        this.EnumerationOptions = new System.IO.EnumerationOptions { MatchCasing = MatchCasing.CaseInsensitive, RecurseSubdirectories = true };
+      }
+      else
+      {
+        this.EnumerationOptions = enumerationOptions;
+      }
     }
+    public string TargetPath { get; }
+
+    public string[]? SearchPattern { get; }
+
+    public SearchOption? SearchOption { get; }
+
+    public EnumerationOptions EnumerationOptions { get; }
+
+    private DirectoryInfo DirInfo { get; set; }
+
+    public async Task<IEnumerable<IMovieFileInfo>> GetAllFiles()
+    {
+        FileInfo[] temp = { };
+
+      try
+      {
+
+        foreach (var pattern in SearchPattern)
+        {
+          temp = DirInfo.GetFiles(pattern, EnumerationOptions);
+        }
+        MovieFileInfo[] files = await Task.WhenAll(temp.Select(x => CreateMovieFileInfo(x)));
+        return files;
+      }
+      catch (Exception e)
+      {
+        throw new Exception(e.Message);
+      }
+    }
+
+    public async Task<IMovieFileInfo> GetFile(string movieName)
+    {
+      MovieFileInfo file;
+
+      try
+      {
+        FileInfo temp = null!;
+
+        foreach (var pattern in SearchPattern)
+        {
+            temp = DirInfo.GetFiles(pattern, EnumerationOptions)
+                .SingleOrDefault(x => x.Name.Equals(movieName) || x.FullName.Contains(movieName));
+        }
+        file = await CreateMovieFileInfo(temp);
+      }
+      catch (Exception e)
+      {
+        throw new Exception(e.Message);
+      }
+
+      return file;
+    }
+
+    public async Task<IEnumerable<IMovieFileInfo>> FindFilesBy(FindFileCondition condition)
+    {
+        FileInfo[] temp = null!;
+
+        if (!(SearchPattern is null))
+        {
+            foreach (var pattern in SearchPattern)
+            {
+                temp = DirInfo
+                    .GetFiles(pattern, EnumerationOptions)
+                    .Where(x => condition?.MovieName != null && (x.Name.Contains(condition.MovieName)))
+                    .ToArray();
+            }
+
+            return await Task.WhenAll(temp.Select(x => CreateMovieFileInfo(x)));
+        }
+        else
+        {
+            return new List<MovieFileInfo>();
+        }
+
+    }
+
+    private async Task<MovieFileInfo> CreateMovieFileInfo(FileInfo file)
+    {
+        var mediaTemp =
+            new MovieFileInfo
+            {
+                LocationOnDisk = file.FullName,
+                MovieName = file.Name,
+                MovieSize = file.Length,
+                CreatedAt = file.CreationTime,
+                Exists = file.Exists,
+                Thumbnail = file.FullName,
+                PlaybackTime = await CalculatePlaybackTime(file.FullName),
+                FileType = file.Extension
+            };
+        return mediaTemp;
+    }
+
+    private async Task<TimeSpan> CalculatePlaybackTime(string filePath)
+    {
+      TimeSpan mediaDuration;
+      try
+      {
+        var mediaInfo = await FFmpeg.GetMediaInfo(filePath);
+        mediaDuration = mediaInfo.Duration;
+      }
+      catch (System.Exception)
+      {
+        mediaDuration = TimeSpan.MinValue;
+      }
+      return mediaDuration;
+    }
+
+    public Task<IEnumerable<IMovieFileInfo>> GetAllFiles(string targetFolder, string[] searchPattern, SearchOption option)
+    {
+      throw new NotImplementedException();
+    }
+  }
 }

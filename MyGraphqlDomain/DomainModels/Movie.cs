@@ -4,21 +4,21 @@ using System.Text;
 using MyGraphqlDomain.Abstractions;
 namespace MyGraphqlDomain.DomainModels
 {
-    public class Movie : DomainModelBase
-    {
-        public string MovieName { get; set; }
-        
-        public long MovieSize { get; set; }
+  public class Movie : DomainModelBase
+  {
+    public string MovieName { get; set; } = null!;
 
-        public string LocationOnDisk { get; set; }
-        
-        public string FileType { get; set; }
+    public long MovieSize { get; set; }
 
-        public float PlaybackTime { get; set; }
+    public string LocationOnDisk { get; set; } = null!;
 
-        public MovieGenre Genre { get; set; }
+    public string FileType { get; set; } = null!;
 
-        public string Thumbnail { get; set; }
+    public TimeSpan PlaybackTime { get; set; }
 
-    }
+    public MovieGenre Genre { get; set; }
+
+    public string Thumbnail { get; set; } = null!;
+
+  }
 }

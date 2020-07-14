@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using MyGraphqlDomain.DomainModels;
+using Xabe.FFmpeg;
 
 namespace MyGraphqlDomain.Abstractions
 {
@@ -17,7 +18,7 @@ namespace MyGraphqlDomain.Abstractions
 
         string FileType { get; set; }
 
-        float PlaybackTime { get; set; }
+        TimeSpan PlaybackTime { get; set; }
 
         MovieGenre? Genre { get; set; }
 

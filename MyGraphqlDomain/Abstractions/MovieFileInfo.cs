@@ -14,7 +14,7 @@ namespace MyGraphqlDomain.Abstractions
         public bool Exists { get; set; }
         public string LocationOnDisk { get; set; } = null!;
         public string FileType { get; set; } = null!;
-        public float PlaybackTime { get; set; }
+        public TimeSpan PlaybackTime { get; set; }
         public MovieGenre? Genre { get; set; }
         public string Thumbnail { get; set; } = null!;
     }

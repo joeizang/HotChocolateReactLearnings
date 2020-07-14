@@ -8,21 +8,27 @@ using MyGraphqlDomain.Abstractions;
 
 namespace MyGraphqlBackend.Abstractions
 {
-    public interface IFileSystemService
-    {
-        IEnumerable<IMovieFileInfo> GetAllFiles(string targetFolder, string[] searchPattern, SearchOption option);
+  public interface IFileSystemService
+  {
+    string TargetPath { get; }
+    string[]? SearchPattern { get; }
 
-        IMovieFileInfo GetFile(string movieName);
+    SearchOption? SearchOption { get; }
 
-        IList<IMovieFileInfo> FindFilesBy(FindFileCondition condition);
-    }
+    EnumerationOptions EnumerationOptions { get; }
+    Task<IEnumerable<IMovieFileInfo>> GetAllFiles();
 
-    public class FindFileCondition
-    {
-        public virtual DateTimeOffset? MovieDate { get; set; }
+    Task<IMovieFileInfo> GetFile(string movieName);
 
-        public virtual string? MovieName { get; set; }
+    Task<IEnumerable<IMovieFileInfo>> FindFilesBy(FindFileCondition condition);
+  }
 
-        public virtual float? MovieLength { get; set; }
-    }
+  public class FindFileCondition
+  {
+    public virtual DateTimeOffset? MovieDate { get; set; }
+
+    public virtual string? MovieName { get; set; }
+
+    public virtual float? MovieLength { get; set; }
+  }
 }
