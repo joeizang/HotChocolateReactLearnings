@@ -68,7 +68,7 @@ namespace MyGraphqlBackend.Services
         {
           temp = DirInfo.GetFiles(pattern, EnumerationOptions);
         }
-        MovieFileInfo[] files = await Task.WhenAll(temp.Select(x => CreateMovieFileInfo(x)));
+        MovieFileInfo[] files = await Task.WhenAll(temp.Select(CreateMovieFileInfo));
         return files;
       }
       catch (Exception e)
@@ -114,7 +114,7 @@ namespace MyGraphqlBackend.Services
                     .ToArray();
             }
 
-            return await Task.WhenAll(temp.Select(x => CreateMovieFileInfo(x)));
+            return await Task.WhenAll(temp.Select(CreateMovieFileInfo));
         }
         else
         {
@@ -153,11 +153,6 @@ namespace MyGraphqlBackend.Services
         mediaDuration = TimeSpan.MinValue;
       }
       return mediaDuration;
-    }
-
-    public Task<IEnumerable<IMovieFileInfo>> GetAllFiles(string targetFolder, string[] searchPattern, SearchOption option)
-    {
-      throw new NotImplementedException();
     }
   }
 }
