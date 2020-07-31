@@ -11,8 +11,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MyGraphqlBackend.Abstractions;
 using MyGraphqlBackend.Context;
 using MyGraphqlBackend.GraphQL.Queries.Movies;
+using MyGraphqlBackend.Services;
+using MyGraphqlDomain.DomainModels;
 
 namespace MyGraphqlBackend
 {
@@ -29,6 +32,8 @@ namespace MyGraphqlBackend
         {
             services.AddDbContext<GQLDbContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddScoped<IDataService<Movie>, DataService<Movie>>();
+            services.AddScoped<DataService<Movie>>();
             services.AddCors(options =>
             {
                 options.AddDefaultPolicy(p =>
@@ -59,7 +64,8 @@ namespace MyGraphqlBackend
             //configure graphql endpoint
             app
                 .UseWebSockets()
-                .UseGraphQL("/graphql");
+                .UseGraphQL()
+                .UsePlayground();
             // app.UseEndpoints(endpoints =>
             // {
             //     endpoints.MapGet("/", async context =>
