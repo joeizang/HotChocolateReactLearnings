@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using HotChocolate;
+using HotChocolate.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -10,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MyGraphqlBackend.Context;
+using MyGraphqlBackend.GraphQL.Queries.Movies;
 
 namespace MyGraphqlBackend
 {
@@ -26,9 +29,24 @@ namespace MyGraphqlBackend
         {
             services.AddDbContext<GQLDbContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
-            
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(p =>
+                {
+                    p.WithOrigins("http://localhost:3000")
+                        .AllowAnyHeader()
+                        .AllowAnyOrigin()
+                        .AllowAnyMethod();
+                });
+            });
+            services.AddGraphQL(
+                SchemaBuilder.New()
+                .AddQueryType<MovieQueryType>()
+                .Create()
+            );
         }
 
+        // if you don't do EVERYTHING! to change things, things will remain the same
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
@@ -37,15 +55,18 @@ namespace MyGraphqlBackend
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseRouting();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Hello World!");
-                });
-            });
+            app.UseCors().UseRouting();
+            //configure graphql endpoint
+            app
+                .UseWebSockets()
+                .UseGraphQL("/graphql");
+            // app.UseEndpoints(endpoints =>
+            // {
+            //     endpoints.MapGet("/", async context =>
+            //     {
+            //         await context.Response.WriteAsync("Hello World!");
+            //     });
+            // });
         }
     }
 }
